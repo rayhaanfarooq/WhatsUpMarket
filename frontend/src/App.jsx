@@ -12,12 +12,14 @@ import {
 import { getFeed, getRuns, getStats, previewPipeline, runPipeline } from "./api";
 
 const SECTORS = [
-  { value: "", label: "All sectors" },
-  { value: "semiconductors", label: "Semis" },
-  { value: "memory", label: "Memory" },
+  { value: "", label: "All desks" },
+  { value: "tech", label: "Tech" },
   { value: "nuclear", label: "Nuclear" },
+  { value: "healthcare", label: "Healthcare" },
+  { value: "finance", label: "Finance" },
   { value: "energy", label: "Energy" },
-  { value: "ai_infrastructure", label: "AI infra" },
+  { value: "industrials", label: "Industrials" },
+  { value: "consumer", label: "Consumer" },
 ];
 
 const DECISION_TABS = [
@@ -70,10 +72,16 @@ function formatWhen(iso) {
 function formatSector(key) {
   return (
     {
+      tech: "Tech",
+      nuclear: "Nuclear",
+      healthcare: "Healthcare",
+      finance: "Finance",
+      energy: "Energy",
+      industrials: "Industrials",
+      consumer: "Consumer",
+      general: "General",
       semiconductors: "Semiconductors",
       memory: "Memory",
-      nuclear: "Nuclear",
-      energy: "Energy",
       ai_infrastructure: "AI infrastructure",
     }[key] || key
   );
@@ -366,6 +374,9 @@ export default function App() {
                             Discord
                           </span>
                         ) : null}
+                        <span className="rounded-md bg-white/5 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide text-zinc-300">
+                          {formatSector(item.market_sector || "general")}
+                        </span>
                         <span className={`text-xs ${impact.className}`}>{impact.text}</span>
                         <span className="ml-auto font-mono text-[11px] text-zinc-500">
                           {formatWhen(item.analyzed_at)}
@@ -400,20 +411,19 @@ export default function App() {
                       </div>
                       <p className="mt-3 text-sm text-zinc-300">{item.reason}</p>
                       <div className="mt-4 flex flex-wrap gap-1.5">
-                        {(item.sectors || []).length
-                          ? item.sectors.map((s) => (
-                              <span
-                                key={s}
-                                className="rounded-full border border-white/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-zinc-400"
-                              >
-                                {formatSector(s)}
-                              </span>
-                            ))
-                          : (
-                            <span className="rounded-full border border-white/10 px-2 py-0.5 font-mono text-[10px] text-zinc-600">
-                              Off radar
-                            </span>
-                          )}
+                        {item.market_sector ? (
+                          <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-emerald-200">
+                            {formatSector(item.market_sector)}
+                          </span>
+                        ) : null}
+                        {(item.sectors || []).map((s) => (
+                          <span
+                            key={s}
+                            className="rounded-full border border-white/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-zinc-400"
+                          >
+                            {formatSector(s)}
+                          </span>
+                        ))}
                         {(item.tickers || []).slice(0, 6).map((t) => (
                           <span
                             key={t}

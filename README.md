@@ -22,7 +22,8 @@ WhatsUpMarket/
 │   ├── config.py              # env + constants (sectors, thresholds)
 │   ├── analyzer/
 │   │   ├── analyzer.py            # main analyzer (stable interface)
-│   │   ├── sector_classifier.py   # keyword-based sector classification
+│   │   ├── sector_classifier.py   # theme tags (semis, memory, …)
+│   │   ├── market_sector_classifier.py  # Discord desk (tech, healthcare, …)
 │   │   └── importance_classifier.py  # rule-based importance scoring
 │   ├── integrations/
 │   │   ├── alpha_vantage.py    # NEWS_SENTIMENT fetch
@@ -112,20 +113,30 @@ Example response:
 }
 ```
 
-Qualifying articles are posted to your Discord channel as embeds.
+Qualifying articles are posted as embeds into the matching Discord thread.
 
 ---
 
 ## How Analysis Works
 
-- **Sectors** (`sector_classifier.py`): keyword matching against 5 hardcoded
-  sectors — `semiconductors`, `memory`, `nuclear`, `energy`, `ai_infrastructure`.
-  An article may match multiple sectors.
+- **Themes** (`sector_classifier.py`): keyword matching against 5 tags —
+  `semiconductors`, `memory`, `nuclear`, `energy`, `ai_infrastructure`.
+  An article may match multiple themes.
+- **Market sector** (`market_sector_classifier.py`): a second model that assigns
+  one Discord desk — `tech`, `nuclear`, `healthcare`, `finance`, `energy`,
+  `industrials`, `consumer`, or `general`. PUSH stories post into the matching
+  named thread when `DISCORD_THREAD_*` IDs are set.
 - **Importance** (`importance_classifier.py`): rule-based score in `[0.0, 1.0]`.
   High-signal events (earnings, acquisitions, capacity expansions, contracts,
   regulation) score higher; routine analyst notes / generic commentary score lower.
 - **Publish decision**: `< 0.40` SKIP · `0.40–0.59` LOW · `≥ 0.60` PUSH.
   Only PUSH-tier, sector-relevant articles are sent to Discord.
+
+Create one Discord thread per desk (Tech, Nuclear, Healthcare, Finance, …) in
+the webhook's channel. Enable Developer Mode, copy each thread ID, and set
+`DISCORD_THREAD_TECH`, `DISCORD_THREAD_NUCLEAR`, and so on (or `DISCORD_THREAD_MAP`
+JSON). The pipeline then posts into that thread. If no thread ID is set for a
+desk, the embed still goes to the webhook's default destination.
 
 The analyzer is modular — the rule-based classifiers can be replaced by ML
 models later without changing the pipeline.
