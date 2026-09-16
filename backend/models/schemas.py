@@ -26,6 +26,7 @@ class Analysis(BaseModel):
     relevant: bool
     importance: float = Field(ge=0.0, le=1.0)
     sectors: list[str] = Field(default_factory=list)
+    market_sector: str = "general"
     tickers: list[str] = Field(default_factory=list)
     impact: Impact = "neutral"
     reason: str = ""
@@ -58,6 +59,7 @@ class FeedItem(BaseModel):
     source: str | None = None
     tickers: list[str] = Field(default_factory=list)
     sectors: list[str] = Field(default_factory=list)
+    market_sector: str = "general"
     importance: float
     impact: Impact = "neutral"
     relevant: bool
