@@ -12,7 +12,10 @@ load_dotenv(_ROOT / ".env")
 ALPHA_VANTAGE_API_KEY: str | None = os.getenv("ALPHA_VANTAGE_API_KEY")
 DISCORD_WEBHOOK_URL: str | None = os.getenv("DISCORD_WEBHOOK_URL")
 
-# Local SQLite file for article history and Discord dedup.
+# Postgres (Supabase) when set. Render should use the pooled URI + sslmode=require.
+DATABASE_URL: str | None = os.getenv("DATABASE_URL") or os.getenv("SUPABASE_DB_URL")
+
+# Local SQLite fallback when DATABASE_URL is unset.
 DATABASE_PATH = Path(
     os.getenv("DATABASE_PATH", str(_ROOT / "backend" / "data" / "marketbrief.db"))
 )

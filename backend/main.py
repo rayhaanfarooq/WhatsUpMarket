@@ -1,8 +1,8 @@
 """MarketBrief FastAPI application.
 
 Pipeline: Alpha Vantage NEWS_SENTIMENT -> Analyzer -> Filter -> Discord.
-Articles, analyses, and publishes are persisted to SQLite for dedup and
-the operator dashboard.
+Articles, analyses, and publishes are persisted to Postgres (Supabase)
+when DATABASE_URL is set, otherwise local SQLite.
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ app.add_middleware(
 @app.get("/")
 async def health() -> dict:
     """Health check."""
-    return {"status": "ok", "service": "marketbrief"}
+    return {"status": "ok", "service": "marketbrief", "database": store.backend_name()}
 
 
 @app.get("/news", response_model=list[Article])

@@ -1,7 +1,7 @@
-"""SQLite persistence for articles, analyses, publishes, and pipeline runs.
+"""Persistence for articles, analyses, publishes, and pipeline runs.
 
-Used for Discord dedup and the operator dashboard. The database file lives
-at DATABASE_PATH (default: backend/data/marketbrief.db).
+Uses Supabase/Postgres when DATABASE_URL is set (required on Render).
+Falls back to local SQLite for development without Postgres.
 """
 
 from __future__ import annotations
@@ -9,16 +9,18 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from threading import Lock
-from typing import Any
+from typing import Any, Iterator
 
-from config import DATABASE_PATH
+from config import DATABASE_PATH, DATABASE_URL
 from models.schemas import Analysis, Article
 
 _lock = Lock()
+_pg_module = None
 
-SCHEMA = """
+SQLITE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS articles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fingerprint TEXT NOT NULL UNIQUE,
@@ -68,6 +70,85 @@ CREATE INDEX IF NOT EXISTS idx_analyses_article ON analyses(article_id, created_
 CREATE INDEX IF NOT EXISTS idx_analyses_decision ON analyses(decision);
 """
 
+POSTGRES_SCHEMA = """
+CREATE TABLE IF NOT EXISTS articles (
+    id BIGSERIAL PRIMARY KEY,
+    fingerprint TEXT NOT NULL UNIQUE,
+    url TEXT,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL DEFAULT '',
+    source TEXT,
+    tickers_json TEXT NOT NULL DEFAULT '[]',
+    keywords_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS analyses (
+    id BIGSERIAL PRIMARY KEY,
+    article_id BIGINT NOT NULL REFERENCES articles(id),
+    relevant INTEGER NOT NULL,
+    importance DOUBLE PRECISION NOT NULL,
+    sectors_json TEXT NOT NULL DEFAULT '[]',
+    tickers_json TEXT NOT NULL DEFAULT '[]',
+    impact TEXT NOT NULL,
+    reason TEXT NOT NULL DEFAULT '',
+    decision TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS publishes (
+    id BIGSERIAL PRIMARY KEY,
+    article_id BIGINT NOT NULL UNIQUE REFERENCES articles(id),
+    analysis_id BIGINT NOT NULL REFERENCES analyses(id),
+    published_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pipeline_runs (
+    id BIGSERIAL PRIMARY KEY,
+    ticker TEXT,
+    topic TEXT,
+    articles_fetched INTEGER NOT NULL,
+    articles_analyzed INTEGER NOT NULL,
+    articles_published INTEGER NOT NULL,
+    articles_skipped INTEGER NOT NULL,
+    articles_duplicate INTEGER NOT NULL DEFAULT 0,
+    started_at TEXT NOT NULL,
+    finished_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_analyses_article ON analyses(article_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analyses_decision ON analyses(decision);
+"""
+
+
+def uses_postgres() -> bool:
+    url = (DATABASE_URL or "").strip()
+    return url.startswith("postgres://") or url.startswith("postgresql://")
+
+
+def backend_name() -> str:
+    return "postgres" if uses_postgres() else "sqlite"
+
+
+def _pg_dsn() -> str:
+    url = (DATABASE_URL or "").strip()
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://") :]
+    if "sslmode=" not in url:
+        joiner = "&" if "?" in url else "?"
+        url = f"{url}{joiner}sslmode=require"
+    return url
+
+
+def _psycopg():
+    global _pg_module
+    if _pg_module is None:
+        import psycopg
+        from psycopg.rows import dict_row
+
+        _pg_module = (psycopg, dict_row)
+    return _pg_module
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -80,11 +161,28 @@ def _dumps(value: list[str]) -> str:
 def _loads(raw: str | None) -> list[str]:
     if not raw:
         return []
+    if isinstance(raw, list):
+        return [str(item) for item in raw]
     try:
         data = json.loads(raw)
-    except json.JSONDecodeError:
+    except (TypeError, json.JSONDecodeError):
         return []
     return [str(item) for item in data] if isinstance(data, list) else []
+
+
+def _as_dict(row: Any) -> dict[str, Any]:
+    if row is None:
+        return {}
+    if isinstance(row, dict):
+        return row
+    return dict(row)
+
+
+def _count(row: Any) -> int:
+    data = _as_dict(row)
+    if "n" in data:
+        return int(data["n"])
+    return int(row[0])
 
 
 def article_fingerprint(article: Article) -> str:
@@ -93,23 +191,65 @@ def article_fingerprint(article: Article) -> str:
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
 
-def connect() -> sqlite3.Connection:
+@contextmanager
+def _connect() -> Iterator[Any]:
+    if uses_postgres():
+        psycopg, dict_row = _psycopg()
+        conn = psycopg.connect(_pg_dsn(), row_factory=dict_row)
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+        return
+
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DATABASE_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def _prepare(sql: str) -> str:
+    if uses_postgres():
+        return sql.replace("?", "%s")
+    return sql
+
+
+def _execute(conn: Any, sql: str, params: tuple[Any, ...] | list[Any] = ()) -> Any:
+    return conn.execute(_prepare(sql), params)
+
+
+def _insert_returning_id(conn: Any, sql: str, params: tuple[Any, ...]) -> int:
+    if uses_postgres():
+        row = conn.execute(_prepare(sql.rstrip().rstrip(";") + " RETURNING id"), params).fetchone()
+        return int(_as_dict(row)["id"])
+    cursor = conn.execute(sql, params)
+    return int(cursor.lastrowid)
 
 
 def init_db() -> None:
     """Create tables if they do not exist."""
+    schema = POSTGRES_SCHEMA if uses_postgres() else SQLITE_SCHEMA
     with _lock:
-        conn = connect()
-        try:
-            conn.executescript(SCHEMA)
-            conn.commit()
-        finally:
-            conn.close()
+        with _connect() as conn:
+            if uses_postgres():
+                for statement in schema.split(";"):
+                    statement = statement.strip()
+                    if statement:
+                        conn.execute(statement)
+            else:
+                conn.executescript(schema)
 
 
 def upsert_article(article: Article) -> tuple[int, bool]:
@@ -117,15 +257,16 @@ def upsert_article(article: Article) -> tuple[int, bool]:
     fingerprint = article_fingerprint(article)
     now = _now()
     with _lock:
-        conn = connect()
-        try:
-            existing = conn.execute(
+        with _connect() as conn:
+            existing = _execute(
+                conn,
                 "SELECT id FROM articles WHERE fingerprint = ?",
                 (fingerprint,),
             ).fetchone()
             if existing:
-                return int(existing["id"]), False
-            cursor = conn.execute(
+                return int(_as_dict(existing)["id"]), False
+            article_id = _insert_returning_id(
+                conn,
                 """
                 INSERT INTO articles (
                     fingerprint, url, title, summary, source,
@@ -143,18 +284,15 @@ def upsert_article(article: Article) -> tuple[int, bool]:
                     now,
                 ),
             )
-            conn.commit()
-            return int(cursor.lastrowid), True
-        finally:
-            conn.close()
+            return article_id, True
 
 
 def save_analysis(article_id: int, analysis: Analysis, decision: str) -> int:
     now = _now()
     with _lock:
-        conn = connect()
-        try:
-            cursor = conn.execute(
+        with _connect() as conn:
+            return _insert_returning_id(
+                conn,
                 """
                 INSERT INTO analyses (
                     article_id, relevant, importance, sectors_json, tickers_json,
@@ -173,40 +311,40 @@ def save_analysis(article_id: int, analysis: Analysis, decision: str) -> int:
                     now,
                 ),
             )
-            conn.commit()
-            return int(cursor.lastrowid)
-        finally:
-            conn.close()
 
 
 def is_published(article_id: int) -> bool:
     with _lock:
-        conn = connect()
-        try:
-            row = conn.execute(
-                "SELECT 1 FROM publishes WHERE article_id = ?",
+        with _connect() as conn:
+            row = _execute(
+                conn,
+                "SELECT 1 AS n FROM publishes WHERE article_id = ?",
                 (article_id,),
             ).fetchone()
             return row is not None
-        finally:
-            conn.close()
 
 
 def record_publish(article_id: int, analysis_id: int) -> None:
     now = _now()
     with _lock:
-        conn = connect()
-        try:
-            conn.execute(
-                """
-                INSERT OR IGNORE INTO publishes (article_id, analysis_id, published_at)
-                VALUES (?, ?, ?)
-                """,
-                (article_id, analysis_id, now),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+        with _connect() as conn:
+            if uses_postgres():
+                conn.execute(
+                    """
+                    INSERT INTO publishes (article_id, analysis_id, published_at)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (article_id) DO NOTHING
+                    """,
+                    (article_id, analysis_id, now),
+                )
+            else:
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO publishes (article_id, analysis_id, published_at)
+                    VALUES (?, ?, ?)
+                    """,
+                    (article_id, analysis_id, now),
+                )
 
 
 def record_run(
@@ -222,9 +360,9 @@ def record_run(
 ) -> None:
     finished_at = _now()
     with _lock:
-        conn = connect()
-        try:
-            conn.execute(
+        with _connect() as conn:
+            _execute(
+                conn,
                 """
                 INSERT INTO pipeline_runs (
                     ticker, topic, articles_fetched, articles_analyzed,
@@ -244,9 +382,6 @@ def record_run(
                     finished_at,
                 ),
             )
-            conn.commit()
-        finally:
-            conn.close()
 
 
 def list_feed(
@@ -299,30 +434,28 @@ def list_feed(
     params.append(limit)
 
     with _lock:
-        conn = connect()
-        try:
-            rows = conn.execute(query, params).fetchall()
-        finally:
-            conn.close()
+        with _connect() as conn:
+            rows = _execute(conn, query, params).fetchall()
 
     items: list[dict[str, Any]] = []
     for row in rows:
+        data = _as_dict(row)
         items.append(
             {
-                "article_id": row["article_id"],
-                "title": row["title"],
-                "summary": row["summary"],
-                "url": row["url"],
-                "source": row["source"],
-                "tickers": _loads(row["tickers_json"]) or _loads(row["article_tickers_json"]),
-                "sectors": _loads(row["sectors_json"]),
-                "importance": row["importance"],
-                "impact": row["impact"],
-                "relevant": bool(row["relevant"]),
-                "decision": row["decision"],
-                "reason": row["reason"],
-                "published": bool(row["published"]),
-                "analyzed_at": row["analyzed_at"],
+                "article_id": data["article_id"],
+                "title": data["title"],
+                "summary": data["summary"],
+                "url": data["url"],
+                "source": data["source"],
+                "tickers": _loads(data["tickers_json"]) or _loads(data["article_tickers_json"]),
+                "sectors": _loads(data["sectors_json"]),
+                "importance": data["importance"],
+                "impact": data["impact"],
+                "relevant": bool(data["relevant"]),
+                "decision": data["decision"],
+                "reason": data["reason"],
+                "published": bool(data["published"]),
+                "analyzed_at": data["analyzed_at"],
             }
         )
     return items
@@ -330,16 +463,17 @@ def list_feed(
 
 def get_stats() -> dict[str, Any]:
     with _lock:
-        conn = connect()
-        try:
-            articles_stored = conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
-            analyses_stored = conn.execute("SELECT COUNT(*) FROM analyses").fetchone()[0]
-            published = conn.execute("SELECT COUNT(*) FROM publishes").fetchone()[0]
-            pipeline_runs = conn.execute("SELECT COUNT(*) FROM pipeline_runs").fetchone()[0]
-            last_run = conn.execute(
-                "SELECT finished_at FROM pipeline_runs ORDER BY id DESC LIMIT 1"
+        with _connect() as conn:
+            articles_stored = _count(_execute(conn, "SELECT COUNT(*) AS n FROM articles").fetchone())
+            analyses_stored = _count(_execute(conn, "SELECT COUNT(*) AS n FROM analyses").fetchone())
+            published = _count(_execute(conn, "SELECT COUNT(*) AS n FROM publishes").fetchone())
+            pipeline_runs = _count(_execute(conn, "SELECT COUNT(*) AS n FROM pipeline_runs").fetchone())
+            last_run = _execute(
+                conn,
+                "SELECT finished_at FROM pipeline_runs ORDER BY id DESC LIMIT 1",
             ).fetchone()
-            decision_rows = conn.execute(
+            decision_rows = _execute(
+                conn,
                 """
                 SELECT decision, COUNT(*) AS n
                 FROM analyses
@@ -347,18 +481,17 @@ def get_stats() -> dict[str, Any]:
                     SELECT MAX(id) FROM analyses GROUP BY article_id
                 )
                 GROUP BY decision
-                """
+                """,
             ).fetchall()
-        finally:
-            conn.close()
 
-    by_decision = {row["decision"]: row["n"] for row in decision_rows}
+    last = _as_dict(last_run)
+    by_decision = {_as_dict(row)["decision"]: _as_dict(row)["n"] for row in decision_rows}
     return {
         "articles_stored": int(articles_stored),
         "analyses_stored": int(analyses_stored),
         "published": int(published),
         "pipeline_runs": int(pipeline_runs),
-        "last_run_at": last_run["finished_at"] if last_run else None,
+        "last_run_at": last.get("finished_at") if last else None,
         "latest_by_decision": {
             "PUSH": int(by_decision.get("PUSH", 0)),
             "LOW": int(by_decision.get("LOW", 0)),
@@ -369,9 +502,9 @@ def get_stats() -> dict[str, Any]:
 
 def list_runs(limit: int = 20) -> list[dict[str, Any]]:
     with _lock:
-        conn = connect()
-        try:
-            rows = conn.execute(
+        with _connect() as conn:
+            rows = _execute(
+                conn,
                 """
                 SELECT ticker, topic, articles_fetched, articles_analyzed,
                        articles_published, articles_skipped, articles_duplicate,
@@ -382,6 +515,4 @@ def list_runs(limit: int = 20) -> list[dict[str, Any]]:
                 """,
                 (limit,),
             ).fetchall()
-        finally:
-            conn.close()
-    return [dict(row) for row in rows]
+    return [_as_dict(row) for row in rows]
