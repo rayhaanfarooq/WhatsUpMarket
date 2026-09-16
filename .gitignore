@@ -1,0 +1,21 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# Node / Frontend
+node_modules/
+dist/
+.vite/
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
