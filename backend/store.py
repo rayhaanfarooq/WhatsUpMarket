@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS analyses (
     impact TEXT NOT NULL,
     reason TEXT NOT NULL DEFAULT '',
     decision TEXT NOT NULL,
+    market_sector TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
 );
 
@@ -93,6 +94,7 @@ CREATE TABLE IF NOT EXISTS analyses (
     impact TEXT NOT NULL,
     reason TEXT NOT NULL DEFAULT '',
     decision TEXT NOT NULL,
+    market_sector TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
 );
 
@@ -250,6 +252,21 @@ def init_db() -> None:
                         conn.execute(statement)
             else:
                 conn.executescript(schema)
+            _ensure_market_sector_column(conn)
+
+
+def _ensure_market_sector_column(conn: Any) -> None:
+    """Add market_sector to existing databases created before this column."""
+    if uses_postgres():
+        conn.execute(
+            "ALTER TABLE analyses ADD COLUMN IF NOT EXISTS market_sector TEXT NOT NULL DEFAULT ''"
+        )
+        return
+    columns = [row["name"] for row in conn.execute("PRAGMA table_info(analyses)").fetchall()]
+    if "market_sector" not in columns:
+        conn.execute(
+            "ALTER TABLE analyses ADD COLUMN market_sector TEXT NOT NULL DEFAULT ''"
+        )
 
 
 def upsert_article(article: Article) -> tuple[int, bool]:
@@ -296,8 +313,8 @@ def save_analysis(article_id: int, analysis: Analysis, decision: str) -> int:
                 """
                 INSERT INTO analyses (
                     article_id, relevant, importance, sectors_json, tickers_json,
-                    impact, reason, decision, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    impact, reason, decision, market_sector, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     article_id,
@@ -308,6 +325,7 @@ def save_analysis(article_id: int, analysis: Analysis, decision: str) -> int:
                     analysis.impact,
                     analysis.reason,
                     decision,
+                    analysis.market_sector,
                     now,
                 ),
             )
@@ -407,6 +425,7 @@ def list_feed(
             n.impact,
             n.reason,
             n.decision,
+            n.market_sector,
             n.created_at AS analyzed_at,
             CASE WHEN p.id IS NULL THEN 0 ELSE 1 END AS published
         FROM articles a
@@ -424,8 +443,8 @@ def list_feed(
         query += " AND n.decision = ?"
         params.append(decision.upper())
     if sector:
-        query += " AND n.sectors_json LIKE ?"
-        params.append(f"%{sector}%")
+        query += " AND (n.market_sector = ? OR n.sectors_json LIKE ?)"
+        params.extend([sector, f"%{sector}%"])
     if ticker:
         query += " AND (n.tickers_json LIKE ? OR a.tickers_json LIKE ?)"
         needle = f"%{ticker.upper()}%"
@@ -449,6 +468,7 @@ def list_feed(
                 "source": data["source"],
                 "tickers": _loads(data["tickers_json"]) or _loads(data["article_tickers_json"]),
                 "sectors": _loads(data["sectors_json"]),
+                "market_sector": data.get("market_sector") or "general",
                 "importance": data["importance"],
                 "impact": data["impact"],
                 "relevant": bool(data["relevant"]),
