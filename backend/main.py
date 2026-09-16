@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from analyzer.analyzer import analyze_article, publish_decision
 from config import PUSH_THRESHOLD
 from integrations.alpha_vantage import AlphaVantageError, fetch_news
-from integrations.discord import DiscordError, send_discord_embed
+from integrations.discord import DiscordError, send_discord_embed, thread_id_for_sector
 from integrations.formatter import build_discord_embed
 from models.schemas import (
     AnalyzedArticle,
@@ -109,7 +109,10 @@ async def run(
         ):
             embed = build_discord_embed(article, analysis)
             try:
-                await send_discord_embed(embed)
+                await send_discord_embed(
+                    embed,
+                    thread_id=thread_id_for_sector(analysis.market_sector),
+                )
             except DiscordError as exc:
                 raise HTTPException(status_code=502, detail=str(exc)) from exc
             store.record_publish(article_id, analysis_id)

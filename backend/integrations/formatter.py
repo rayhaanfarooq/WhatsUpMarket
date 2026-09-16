@@ -12,12 +12,26 @@ _SECTOR_LABELS = {
     "ai_infrastructure": "AI Infrastructure",
 }
 
-_SECTOR_EMOJI = {
-    "memory": "💾",
-    "semiconductors": "🧩",
+_MARKET_SECTOR_LABELS = {
+    "tech": "Tech",
+    "nuclear": "Nuclear",
+    "healthcare": "Healthcare",
+    "finance": "Finance",
+    "energy": "Energy",
+    "industrials": "Industrials",
+    "consumer": "Consumer",
+    "general": "General",
+}
+
+_MARKET_SECTOR_EMOJI = {
+    "tech": "💻",
     "nuclear": "☢️",
+    "healthcare": "🩺",
+    "finance": "🏦",
     "energy": "⚡",
-    "ai_infrastructure": "🤖",
+    "industrials": "🏭",
+    "consumer": "🛒",
+    "general": "📈",
 }
 
 _IMPACT_META = {
@@ -27,23 +41,30 @@ _IMPACT_META = {
 }
 
 
-def _primary_sector(sectors: list[str]) -> str:
-    return sectors[0] if sectors else "ai_infrastructure"
+def _primary_desk(analysis: Analysis) -> str:
+    return analysis.market_sector or (_primary_theme(analysis.sectors))
+
+
+def _primary_theme(sectors: list[str]) -> str:
+    return sectors[0] if sectors else "general"
 
 
 def build_discord_embed(article: Article, analysis: Analysis) -> dict:
     """Build a Discord embed dict for a qualifying article."""
-    primary = _primary_sector(analysis.sectors)
-    sector_emoji = _SECTOR_EMOJI.get(primary, "📈")
-    sector_label = _SECTOR_LABELS.get(primary, primary).upper()
+    desk = _primary_desk(analysis)
+    sector_emoji = _MARKET_SECTOR_EMOJI.get(desk, "📈")
+    sector_label = _MARKET_SECTOR_LABELS.get(desk, desk).upper()
 
     impact_emoji, impact_label, color = _IMPACT_META.get(
         analysis.impact, _IMPACT_META["neutral"]
     )
 
-    sectors_str = " · ".join(
-        _SECTOR_LABELS.get(s, s) for s in analysis.sectors
-    ) or "—"
+    labels = [_MARKET_SECTOR_LABELS.get(desk, desk)]
+    for theme in analysis.sectors:
+        label = _SECTOR_LABELS.get(theme, theme)
+        if label not in labels:
+            labels.append(label)
+    sectors_str = " · ".join(labels) or "—"
     tickers_str = " ".join(f"${t}" for t in analysis.tickers) or "—"
 
     fields = [
