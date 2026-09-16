@@ -1,16 +1,15 @@
-import { useState } from "react";
 import {
   ArrowRight,
   Bot,
   Cpu,
   Filter,
   Flame,
+  MessageCircle,
   Newspaper,
   Radio,
   ShieldCheck,
   Sparkles,
-  Webhook,
-  Zap,
+  Users,
 } from "lucide-react";
 import { AnimatedGridPattern } from "./components/ui/animated-grid-pattern";
 import { AnimatedList } from "./components/ui/animated-list";
@@ -21,11 +20,14 @@ import { NumberTicker } from "./components/ui/number-ticker";
 import { ShineBorder } from "./components/ui/shine-border";
 import { ShimmerButton } from "./components/ui/shimmer-button";
 
+/** Swap this for your real Discord invite link. */
+const DISCORD_INVITE = "https://discord.gg/whatsupmarket";
+
 const NAV = [
-  { href: "#product", label: "Product" },
-  { href: "#pipeline", label: "Pipeline" },
+  { href: "#why", label: "Why join" },
+  { href: "#feed", label: "The feed" },
   { href: "#sectors", label: "Sectors" },
-  { href: "#discord", label: "Discord" },
+  { href: "#join", label: "Join Discord" },
 ];
 
 const SECTORS = [
@@ -47,48 +49,58 @@ const HEADLINES = [
 const STEPS = [
   {
     icon: Newspaper,
-    title: "Fetch",
-    copy: "Pull fresh market news from Alpha Vantage NEWS_SENTIMENT, optionally filtered by ticker or topic.",
+    title: "We scan the tape",
+    copy: "Market headlines get pulled in continuously so you do not have to live in five news tabs.",
   },
   {
     icon: Cpu,
-    title: "Analyze",
-    copy: "Classify sector, score importance, and tag sentiment so every article becomes structured intelligence.",
+    title: "We score what matters",
+    copy: "Each story is tagged by sector, importance, and sentiment — earnings and contracts beat generic chatter.",
   },
   {
     icon: Filter,
-    title: "Filter",
-    copy: "Skip the noise. Only PUSH-tier, sector-relevant stories survive the 0.60 importance threshold.",
+    title: "We drop the noise",
+    copy: "Only high-signal, sector-relevant stories make the cut. Skip the analyst-note spam.",
   },
   {
-    icon: Webhook,
-    title: "Publish",
-    copy: "Format Discord embeds and fire a webhook. Your channel stays a live desk, not a firehose.",
+    icon: MessageCircle,
+    title: "It lands in Discord",
+    copy: "Clean embeds hit the WhatsUpMarket server so 1,000+ members see the same brief, together.",
   },
 ];
 
 const FEATURES = [
   {
     icon: Flame,
-    title: "Importance scoring",
-    copy: "Earnings, M&A, capacity expansions, contracts, and regulation score high. Analyst notes do not.",
+    title: "High-signal news only",
+    copy: "Earnings, M&A, capacity expansions, contracts, and regulation get posted. Routine commentary stays out.",
   },
   {
     icon: Radio,
-    title: "Sector radar",
-    copy: "Hardcoded coverage for semiconductors, memory, nuclear, energy, and AI infrastructure — expandable later.",
+    title: "Themes that actually move",
+    copy: "Coverage locked on semiconductors, memory, nuclear, energy, and AI infrastructure.",
   },
   {
     icon: ShieldCheck,
-    title: "Publish discipline",
-    copy: "<0.40 skip · 0.40–0.59 low · ≥0.60 push. Only the last bucket hits Discord.",
+    title: "A channel that stays readable",
+    copy: "If it is not important enough, it never pings the server. Your feed stays a desk, not a firehose.",
   },
   {
-    icon: Zap,
-    title: "Lean pipeline",
-    copy: "FastAPI, no database, no bot OAuth. One vertical slice: news in, signal out.",
+    icon: Users,
+    title: "1,000+ members already inside",
+    copy: "Join a community that watches the same filtered tape — talk the news, not the noise.",
   },
 ];
+
+function JoinDiscordButton({ children, className }) {
+  return (
+    <a href={DISCORD_INVITE} target="_blank" rel="noreferrer">
+      <ShimmerButton className={className}>
+        {children}
+      </ShimmerButton>
+    </a>
+  );
+}
 
 function Logo() {
   return (
@@ -115,9 +127,9 @@ function Nav() {
             </a>
           ))}
         </nav>
-        <a href="#waitlist">
-          <ShimmerButton className="px-4 py-2 text-sm font-medium">Get early access</ShimmerButton>
-        </a>
+        <JoinDiscordButton className="px-4 py-2 text-sm font-medium">
+          Join the Discord
+        </JoinDiscordButton>
       </div>
     </header>
   );
@@ -136,31 +148,32 @@ function Hero() {
         <div>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <AnimatedShinyText className="mx-0 text-xs">Lean POC · MarketBrief pipeline</AnimatedShinyText>
+            <AnimatedShinyText className="mx-0 text-xs">
+              1,000+ members · live market brief in Discord
+            </AnimatedShinyText>
           </div>
           <h1 className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl">
-            Financial news in.
+            Hey — join the Discord.
             <br />
             <span className="bg-gradient-to-r from-emerald-300 via-white to-violet-300 bg-clip-text text-transparent">
-              Signal out to Discord.
+              Get the news that actually matters.
             </span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-400">
-            WhatsUpMarket fetches market headlines, scores what actually matters, and publishes only
-            high-importance, sector-relevant stories as Discord embeds.
+            WhatsUpMarket is a Discord community for filtered financial news. We scan headlines,
+            score importance, and post only the high-signal stories so you can trade the tape with
+            1,000+ other members — not another inbox.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a href="#waitlist">
-              <ShimmerButton className="gap-2 font-semibold">
-                Join the waitlist
-                <ArrowRight className="h-4 w-4" />
-              </ShimmerButton>
-            </a>
+            <JoinDiscordButton className="gap-2 font-semibold">
+              Join my Discord server
+              <ArrowRight className="h-4 w-4" />
+            </JoinDiscordButton>
             <a
-              href="#pipeline"
+              href="#feed"
               className="rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-zinc-200 transition hover:border-white/30 hover:bg-white/5"
             >
-              See the pipeline
+              See what gets posted
             </a>
           </div>
           <p className="mt-6 font-mono text-xs text-zinc-500">
@@ -177,7 +190,7 @@ function Hero() {
                 #market-brief
               </div>
               <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 font-mono text-[10px] text-emerald-300">
-                LIVE FILTER
+                1,000+ IN SERVER
               </span>
             </div>
             <AnimatedList delay={1600} className="min-h-[320px] items-stretch">
@@ -216,10 +229,10 @@ function Stats() {
     <section className="border-y border-white/5 bg-white/[0.02]">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-5 py-12 sm:grid-cols-4">
         {[
-          { value: 5, suffix: "", label: "Tracked sectors" },
-          { value: 60, suffix: "+", label: "Push threshold (score ×100)" },
-          { value: 10, suffix: "s", label: "Typical pipeline run" },
-          { value: 1, suffix: "", label: "Webhook. Zero noise." },
+          { value: 1000, suffix: "+", label: "Discord members" },
+          { value: 5, suffix: "", label: "Sectors we watch" },
+          { value: 24, suffix: "/7", label: "Filtered news feed" },
+          { value: 0, suffix: "", label: "Price to join" },
         ].map((stat) => (
           <div key={stat.label}>
             <div className="font-display text-3xl font-bold text-white">
@@ -234,16 +247,16 @@ function Stats() {
   );
 }
 
-function Product() {
+function WhyJoin() {
   return (
-    <section id="product" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-24">
-      <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-300">Product</p>
+    <section id="why" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-24">
+      <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-300">Why join</p>
       <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
-        A desk that reads everything so you do not have to.
+        A market desk in Discord — already 1,000+ deep.
       </h2>
       <p className="mt-4 max-w-2xl text-zinc-400">
-        Most feeds dump headlines. WhatsUpMarket decides what is worth a ping: sector match plus
-        importance score, then a clean Discord embed.
+        This is not software you buy. It is a server you hop into. Come for the filtered news,
+        stay for the people watching the same tape.
       </p>
       <div className="mt-12 grid gap-4 md:grid-cols-2">
         {FEATURES.map((feature) => {
@@ -265,13 +278,13 @@ function Product() {
   );
 }
 
-function Pipeline() {
+function Feed() {
   return (
-    <section id="pipeline" className="scroll-mt-24 border-y border-white/5 bg-white/[0.02] py-24">
+    <section id="feed" className="scroll-mt-24 border-y border-white/5 bg-white/[0.02] py-24">
       <div className="mx-auto max-w-6xl px-5">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-300">Pipeline</p>
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-300">The feed</p>
         <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
-          Four steps. One vertical slice.
+          How stories make it into the server.
         </h2>
         <div className="mt-12 grid gap-4 md:grid-cols-4">
           {STEPS.map((step, i) => {
@@ -332,72 +345,28 @@ function Sectors() {
   );
 }
 
-function Discord() {
+function Join() {
   return (
-    <section id="discord" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-12">
+    <section id="join" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-12 pb-24">
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-violet-950/40 via-ink to-emerald-950/30 p-8 sm:p-12">
         <BorderBeam size={120} duration={10} colorFrom="#a78bfa" colorTo="#34d399" />
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet-300">Delivery</p>
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet-300">Join the server</p>
         <h2 className="mt-3 max-w-2xl font-display text-3xl font-bold text-white sm:text-4xl">
-          Qualifying articles land as Discord embeds — not another inbox.
+          1,000+ people are already in. Come through.
         </h2>
         <p className="mt-4 max-w-xl text-zinc-400">
-          Drop a webhook URL. Hit the pipeline. Your channel becomes a filtered tape for AI
-          infrastructure, energy, and the rest of the radar.
+          Hop into WhatsUpMarket on Discord. Get the filtered market brief, talk the names that
+          matter, and skip the rest. Free to join — just hit the invite.
         </p>
-        <pre className="mt-8 overflow-x-auto rounded-xl border border-white/10 bg-black/50 p-4 font-mono text-xs text-emerald-200/90">
-{`POST /run?topic=technology&limit=10
-{
-  "articles_fetched": 10,
-  "articles_analyzed": 10,
-  "articles_published": 4,
-  "articles_skipped": 6
-}`}
-        </pre>
-      </div>
-    </section>
-  );
-}
-
-function Waitlist() {
-  const [email, setEmail] = useState("");
-  const [done, setDone] = useState(false);
-
-  function onSubmit(event) {
-    event.preventDefault();
-    if (!email.trim()) return;
-    setDone(true);
-  }
-
-  return (
-    <section id="waitlist" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-24">
-      <div className="mx-auto max-w-xl text-center">
-        <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
-          Get the brief before the crowd.
-        </h2>
-        <p className="mt-3 text-zinc-400">
-          Early access for operators who want high-signal market news in Discord, not another
-          terminal tab.
+        <div className="mt-8">
+          <JoinDiscordButton className="gap-2 font-semibold">
+            Join my Discord server
+            <ArrowRight className="h-4 w-4" />
+          </JoinDiscordButton>
+        </div>
+        <p className="mt-6 font-mono text-xs text-zinc-500">
+          discord.gg · WhatsUpMarket · 1,000+ members
         </p>
-        {done ? (
-          <p className="mt-8 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-5 py-4 text-emerald-200">
-            You are on the list. We will ping you when a slot opens.
-          </p>
-        ) : (
-          <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@fund.com"
-              className="flex-1 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/50"
-            />
-            <ShimmerButton type="submit" className="font-semibold">
-              Request access
-            </ShimmerButton>
-          </form>
-        )}
       </div>
     </section>
   );
@@ -408,7 +377,14 @@ function Footer() {
     <footer className="border-t border-white/5 py-8">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 text-sm text-zinc-500 sm:flex-row">
         <Logo />
-        <p>WhatsUpMarket · MarketBrief V0 · Signal over volume</p>
+        <a
+          href={DISCORD_INVITE}
+          target="_blank"
+          rel="noreferrer"
+          className="transition hover:text-white"
+        >
+          Join the Discord · 1,000+ members
+        </a>
       </div>
     </footer>
   );
@@ -420,11 +396,10 @@ export default function App() {
       <Nav />
       <Hero />
       <Stats />
-      <Product />
-      <Pipeline />
+      <WhyJoin />
+      <Feed />
       <Sectors />
-      <Discord />
-      <Waitlist />
+      <Join />
       <Footer />
     </div>
   );
