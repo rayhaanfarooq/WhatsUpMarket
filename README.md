@@ -9,7 +9,7 @@ article (sector classification, importance scoring, impact/sentiment), decides
 whether it's worth surfacing, formats qualifying articles, and publishes them to
 a Discord channel via a webhook. Exposed through a small FastAPI backend.
 
-This is an intentionally lean V0. No database, no auth, no Discord bot.
+This is an intentionally lean V0. No auth, no Discord bot, no scheduler yet.
 
 ---
 
@@ -28,9 +28,11 @@ WhatsUpMarket/
 │   │   ├── alpha_vantage.py    # NEWS_SENTIMENT fetch
 │   │   ├── discord.py          # webhook send
 │   │   └── formatter.py        # Discord embed formatting
+│   ├── store.py               # SQLite history + Discord dedup
 │   ├── models/schemas.py      # Pydantic models
 │   └── requirements.txt
-├── frontend/                  # React + Vite + Tailwind (blank placeholder)
+├── frontend/                  # Operator dashboard (React + Vite + Tailwind)
+├── landingpage/               # Public Discord landing page
 ├── .env.example
 └── .gitignore
 ```
@@ -68,6 +70,10 @@ uvicorn main:app --reload
 
 The API runs at http://127.0.0.1:8000 (docs at `/docs`).
 
+On startup it creates `backend/data/marketbrief.db` (gitignored). Articles,
+analyses, Discord publishes, and pipeline runs are stored there. The same URL
+is not posted to Discord twice.
+
 ---
 
 ## Endpoints
@@ -78,7 +84,10 @@ The API runs at http://127.0.0.1:8000 (docs at `/docs`).
 | GET    | `/news`     | Fetch recent news (`?ticker=`, `?topic=`, `?limit=`) |
 | POST   | `/analyze`  | Analyze one article (JSON body) |
 | POST   | `/run`      | Full pipeline: fetch → analyze → filter → publish to Discord |
-| POST   | `/preview`  | Fetch + analyze without publishing (demo helper) |
+| POST   | `/preview`  | Fetch + analyze without publishing (still stored in SQLite) |
+| GET    | `/feed`     | Latest stored analyses (`?decision=`, `?sector=`, `?ticker=`) |
+| GET    | `/stats`    | Dashboard counts |
+| GET    | `/runs`     | Recent pipeline invocations |
 
 ### Demo
 
@@ -93,7 +102,8 @@ Example response:
   "articles_fetched": 10,
   "articles_analyzed": 10,
   "articles_published": 4,
-  "articles_skipped": 6
+  "articles_skipped": 6,
+  "articles_duplicate": 2
 }
 ```
 
@@ -117,10 +127,11 @@ models later without changing the pipeline.
 
 ---
 
-## Frontend
+## Frontend (operator dashboard)
 
-`frontend/` is a React + Vite + Tailwind scaffold intentionally left blank
-(`App.jsx` is a placeholder). To start it later:
+`frontend/` is a React + Vite + Tailwind dashboard that reads `/feed`, `/stats`,
+and `/runs`, and can trigger Preview or Run. Vite proxies `/api` to the backend
+on port 8000.
 
 ```bash
 cd frontend
@@ -128,9 +139,14 @@ npm install
 npm run dev
 ```
 
+Open http://127.0.0.1:5173 with the API already running.
+
+The public marketing site lives in `landingpage/`.
+
 ---
 
 ## Non-Goals (V0)
 
-No database, authentication, payments, Discord bot/OAuth/slash commands,
-trading, or complex frontend. This POC proves one vertical slice only.
+No authentication, payments, Discord bot/OAuth/slash commands, trading, or
+cron scheduler yet. This slice proves fetch → analyze → store → (optional)
+Discord, plus an operator view of the tape.
