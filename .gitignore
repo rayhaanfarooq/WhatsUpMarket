@@ -1,6 +1,11 @@
 # Environment
 .env
 
+# SQLite
+*.db
+*.db-journal
+backend/data/
+
 # Python
 __pycache__/
 *.py[cod]

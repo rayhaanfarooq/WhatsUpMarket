@@ -12,6 +12,11 @@ load_dotenv(_ROOT / ".env")
 ALPHA_VANTAGE_API_KEY: str | None = os.getenv("ALPHA_VANTAGE_API_KEY")
 DISCORD_WEBHOOK_URL: str | None = os.getenv("DISCORD_WEBHOOK_URL")
 
+# Local SQLite file for article history and Discord dedup.
+DATABASE_PATH = Path(
+    os.getenv("DATABASE_PATH", str(_ROOT / "backend" / "data" / "marketbrief.db"))
+)
+
 ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
 
 # Hardcoded sectors for the POC.
