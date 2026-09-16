@@ -45,3 +45,48 @@ class RunSummary(BaseModel):
     articles_analyzed: int
     articles_published: int
     articles_skipped: int
+    articles_duplicate: int = 0
+
+
+class FeedItem(BaseModel):
+    """Latest analysis for an article, used by the dashboard feed."""
+
+    article_id: int
+    title: str
+    summary: str = ""
+    url: str | None = None
+    source: str | None = None
+    tickers: list[str] = Field(default_factory=list)
+    sectors: list[str] = Field(default_factory=list)
+    importance: float
+    impact: Impact = "neutral"
+    relevant: bool
+    decision: str
+    reason: str = ""
+    published: bool = False
+    analyzed_at: str
+
+
+class DashboardStats(BaseModel):
+    """Aggregate counts for the operator dashboard."""
+
+    articles_stored: int
+    analyses_stored: int
+    published: int
+    pipeline_runs: int
+    last_run_at: str | None = None
+    latest_by_decision: dict[str, int] = Field(default_factory=dict)
+
+
+class PipelineRun(BaseModel):
+    """One recorded /run invocation."""
+
+    ticker: str | None = None
+    topic: str | None = None
+    articles_fetched: int
+    articles_analyzed: int
+    articles_published: int
+    articles_skipped: int
+    articles_duplicate: int = 0
+    started_at: str
+    finished_at: str

@@ -7,7 +7,7 @@ interface; the underlying classifiers can be swapped for ML models later.
 
 from __future__ import annotations
 
-from config import SKIP_THRESHOLD
+from config import PUSH_THRESHOLD, SKIP_THRESHOLD
 from models.schemas import Analysis, Article
 
 from .importance_classifier import score_importance
@@ -72,3 +72,12 @@ def analyze_article(article: Article) -> Analysis:
         impact=impact,
         reason=_build_reason(sectors, impact, importance),
     )
+
+
+def publish_decision(analysis: Analysis) -> str:
+    """Map analysis into SKIP / LOW / PUSH using the configured thresholds."""
+    if not analysis.relevant or analysis.importance < SKIP_THRESHOLD:
+        return "SKIP"
+    if analysis.importance >= PUSH_THRESHOLD:
+        return "PUSH"
+    return "LOW"
