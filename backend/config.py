@@ -22,13 +22,25 @@ DATABASE_PATH = Path(
 
 ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
 
-# Hardcoded sectors for the POC.
+# Theme tags (existing keyword model).
 SECTORS = [
     "semiconductors",
     "memory",
     "nuclear",
     "energy",
     "ai_infrastructure",
+]
+
+# Discord routing buckets (second classifier).
+MARKET_SECTORS = [
+    "tech",
+    "nuclear",
+    "healthcare",
+    "finance",
+    "energy",
+    "industrials",
+    "consumer",
+    "general",
 ]
 
 # Importance thresholds.
