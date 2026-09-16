@@ -43,6 +43,32 @@ MARKET_SECTORS = [
     "general",
 ]
 
+
+def _load_discord_threads() -> dict[str, str]:
+    """Map market_sector -> Discord thread snowflake.
+
+    Set DISCORD_THREAD_MAP as JSON, or DISCORD_THREAD_TECH / _NUCLEAR / etc.
+    """
+    import json
+
+    raw = (os.getenv("DISCORD_THREAD_MAP") or "").strip()
+    if raw.startswith("{"):
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
+        return {str(key).lower(): str(value).strip() for key, value in parsed.items() if value}
+
+    mapping: dict[str, str] = {}
+    for sector in MARKET_SECTORS:
+        value = (os.getenv(f"DISCORD_THREAD_{sector.upper()}") or "").strip()
+        if value:
+            mapping[sector] = value
+    return mapping
+
+
+DISCORD_THREADS = _load_discord_threads()
+
 # Importance thresholds.
 SKIP_THRESHOLD = 0.40   # below this -> SKIP
 PUSH_THRESHOLD = 0.60   # at/above this -> PUSH (else LOW)
