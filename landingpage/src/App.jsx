@@ -3,19 +3,17 @@ import {
   ArrowRight,
   Atom,
   Banknote,
-  Bell,
+  Check,
   Cpu,
   Factory,
-  Filter,
   Hash,
   HeartPulse,
-  Layers,
   Minus,
   Plus,
   Sparkles,
   TrendingDown,
   TrendingUp,
-  Users,
+  X,
   Zap,
 } from "lucide-react";
 import { AnimatedList } from "./components/ui/animated-list";
@@ -120,32 +118,26 @@ const AVATARS = [
   { initials: "NP", color: "linear-gradient(135deg,#84cc16,#10b981)" },
 ];
 
-const BENEFITS = [
-  {
-    icon: Filter,
-    title: "Only what matters",
-    copy: "Earnings, deals, major contracts and policy moves. Routine commentary and clickbait never make it in.",
-    tone: "bg-emerald-50 text-emerald-600",
-  },
-  {
-    icon: Layers,
-    title: "Organized by sector",
-    copy: "Every story lands in its own channel, so you follow tech, energy or healthcare without wading through the rest.",
-    tone: "bg-cyan-50 text-cyan-600",
-  },
-  {
-    icon: Bell,
-    title: "As it happens",
-    copy: "Important stories arrive through the day as they break, each with a one-line note on why it matters.",
-    tone: "bg-indigo-50 text-indigo-600",
-  },
-  {
-    icon: Users,
-    title: "A community to discuss it with",
-    copy: "Talk through the news with 1,000+ members who follow the same markets you do.",
-    tone: "bg-fuchsia-50 text-fuchsia-600",
-  },
+const HEADLINE_STREAM = [
+  { title: "7 stocks to buy before it's too late", reason: "Clickbait" },
+  { title: "TSMC raises full-year outlook on AI chip demand", channel: "tech" },
+  { title: "Analyst reiterates Hold rating on Apple", reason: "Routine" },
+  { title: "Markets mixed as investors await jobs data", reason: "Filler" },
+  { title: "Utility signs 20-year nuclear power deal with a hyperscaler", channel: "nuclear" },
+  { title: "Is Nvidia about to double? Here's what one trader thinks", reason: "Speculation" },
+  { title: "Top 10 dividend picks for October", reason: "Listicle" },
+  { title: "FDA approves a new once-daily weight-loss pill", channel: "healthcare" },
+  { title: "Tesla shares move in early trading", reason: "No news" },
 ];
+
+const POSTED = [
+  "Earnings surprises and guidance changes",
+  "Mergers, acquisitions and big contracts",
+  "FDA decisions and policy moves",
+  "Fed and interest-rate news",
+];
+
+const SKIPPED = ["Price-target shuffles", "“Stocks to buy now” lists", "Recycled headlines", "Market-open filler"];
 
 const STEPS = [
   { title: "Join the server", copy: "One click from Discord. It's free, and there's nothing to install." },
@@ -461,28 +453,67 @@ function Stats() {
 
 function Benefits() {
   return (
-    <section id="why" className="mx-auto max-w-6xl scroll-mt-32 px-6 py-24">
-      <SectionHeading
-        eyebrow="Why members join"
-        title="Less scrolling."
-        accent="Better informed."
-        copy="Financial news moves fast and most of it doesn't matter. We do the filtering so your feed stays short, sharp and useful."
-      />
-      <BlurFade className="mt-14 grid gap-4 md:grid-cols-2" delay={0.05}>
-        {BENEFITS.map((item) => {
-          const Icon = item.icon;
-          return (
-            <MagicCard key={item.title} className="h-full rounded-2xl shadow-sm">
-              <div className="p-7">
-                <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl", item.tone)}>
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-6 text-xl font-semibold text-ink">{item.title}</h3>
-                <p className="mt-2 leading-relaxed text-zinc-600">{item.copy}</p>
-              </div>
-            </MagicCard>
-          );
-        })}
+    <section id="why" className="mx-auto grid max-w-6xl scroll-mt-32 gap-14 px-6 py-24 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+      <div>
+        <SectionHeading
+          eyebrow="The filter"
+          title="Most market news isn't worth"
+          accent="your time."
+          copy="Hundreds of headlines hit the wires every day. Only a handful change anything. Those are the ones that make it into the server — the rest never reach you."
+        />
+        <BlurFade className="mt-10 grid gap-8 sm:grid-cols-2" delay={0.05}>
+          <div>
+            <p className="text-sm font-semibold text-ink">What gets posted</p>
+            <ul className="mt-3 space-y-2.5 text-sm text-zinc-600">
+              {POSTED.map((item) => (
+                <li key={item} className="flex gap-2.5">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink">What doesn&apos;t</p>
+            <ul className="mt-3 space-y-2.5 text-sm text-zinc-500">
+              {SKIPPED.map((item) => (
+                <li key={item} className="flex gap-2.5">
+                  <X className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </BlurFade>
+      </div>
+
+      <BlurFade delay={0.1}>
+        <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl shadow-zinc-900/[0.05]">
+          <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3.5 text-xs">
+            <span className="font-medium text-zinc-500">This morning&apos;s headlines</span>
+            <span className="font-semibold text-emerald-600">3 of 9 posted</span>
+          </div>
+          <ul className="divide-y divide-zinc-100">
+            {HEADLINE_STREAM.map((item) =>
+              item.channel ? (
+                <li key={item.title} className="flex items-center justify-between gap-4 bg-emerald-50/50 px-5 py-3">
+                  <span className="text-sm font-medium text-ink">{item.title}</span>
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold text-white">
+                    <Hash className="h-3 w-3" />
+                    {item.channel}
+                  </span>
+                </li>
+              ) : (
+                <li key={item.title} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <span className="text-sm text-zinc-400 line-through decoration-zinc-300">{item.title}</span>
+                  <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-zinc-400">
+                    {item.reason}
+                  </span>
+                </li>
+              )
+            )}
+          </ul>
+        </div>
       </BlurFade>
     </section>
   );
