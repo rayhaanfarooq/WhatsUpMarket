@@ -13,10 +13,11 @@ import {
   Minus,
   Plus,
   Sparkles,
+  TrendingDown,
+  TrendingUp,
   Users,
   Zap,
 } from "lucide-react";
-import { AnimatedGridPattern } from "./components/ui/animated-grid-pattern";
 import { AnimatedList } from "./components/ui/animated-list";
 import { AnimatedShinyText } from "./components/ui/animated-shiny-text";
 import { AuroraText } from "./components/ui/aurora-text";
@@ -25,7 +26,6 @@ import { BlurFade } from "./components/ui/blur-fade";
 import { BorderBeam } from "./components/ui/border-beam";
 import { MagicCard } from "./components/ui/magic-card";
 import { Marquee } from "./components/ui/marquee";
-import { Meteors } from "./components/ui/meteors";
 import { NumberTicker } from "./components/ui/number-ticker";
 import { ShimmerButton } from "./components/ui/shimmer-button";
 import { WordRotate } from "./components/ui/word-rotate";
@@ -41,42 +41,71 @@ const NAV = [
   { href: "#faq", label: "FAQ" },
 ];
 
+const TICKERS = [
+  { symbol: "NVDA", price: 142.18, change: 2.41 },
+  { symbol: "AAPL", price: 227.52, change: 0.38 },
+  { symbol: "MSFT", price: 438.11, change: 0.92 },
+  { symbol: "TSM", price: 191.07, change: 3.12 },
+  { symbol: "AMZN", price: 186.4, change: -0.54 },
+  { symbol: "GOOGL", price: 167.83, change: 0.27 },
+  { symbol: "META", price: 571.24, change: -1.08 },
+  { symbol: "CCJ", price: 52.66, change: 4.05 },
+  { symbol: "OKLO", price: 24.18, change: 6.72 },
+  { symbol: "LLY", price: 912.35, change: -0.83 },
+  { symbol: "NVO", price: 118.44, change: 1.16 },
+  { symbol: "JPM", price: 214.9, change: 0.41 },
+  { symbol: "GS", price: 512.73, change: -0.29 },
+  { symbol: "XOM", price: 118.02, change: -0.61 },
+  { symbol: "VST", price: 124.55, change: 2.87 },
+  { symbol: "GE", price: 181.4, change: 0.66 },
+];
+
 const SECTOR_STYLE = {
-  Tech: { color: "#22d3ee", icon: Cpu },
-  Nuclear: { color: "#a3e635", icon: Atom },
-  Healthcare: { color: "#fb7185", icon: HeartPulse },
-  Finance: { color: "#fbbf24", icon: Banknote },
-  Energy: { color: "#fb923c", icon: Zap },
-  Industrials: { color: "#818cf8", icon: Factory },
+  Tech: { color: "#0891b2", icon: Cpu },
+  Nuclear: { color: "#65a30d", icon: Atom },
+  Healthcare: { color: "#e11d48", icon: HeartPulse },
+  Finance: { color: "#d97706", icon: Banknote },
+  Energy: { color: "#ea580c", icon: Zap },
+  Industrials: { color: "#4f46e5", icon: Factory },
 };
 
 const BRIEF = [
   {
     sector: "Tech",
+    ticker: "TSM",
+    change: 3.12,
     title: "TSMC raises its outlook as demand for AI chips keeps climbing",
     why: "A strong read on how long the AI build-out can keep running.",
     time: "8m",
   },
   {
     sector: "Nuclear",
+    ticker: "OKLO",
+    change: 6.72,
     title: "Utility signs a 20-year power deal with a data center operator",
     why: "Big tech keeps turning to nuclear for reliable, round-the-clock power.",
     time: "32m",
   },
   {
     sector: "Healthcare",
-    title: "FDA clears a new obesity treatment ahead of schedule",
+    ticker: "LLY",
+    change: -0.83,
+    title: "FDA clears a rival obesity treatment ahead of schedule",
     why: "Competition in the weight-loss market is heating up fast.",
     time: "1h",
   },
   {
     sector: "Finance",
+    ticker: "JPM",
+    change: 0.41,
     title: "Fed minutes point to a slower pace of rate cuts",
     why: "Borrowing costs may stay higher for longer than markets expected.",
     time: "2h",
   },
   {
     sector: "Energy",
+    ticker: "VST",
+    change: 2.87,
     title: "Grid operator warns of tight summer supply as demand surges",
     why: "Power prices and utility stocks could move on this.",
     time: "3h",
@@ -84,11 +113,11 @@ const BRIEF = [
 ];
 
 const AVATARS = [
-  { initials: "JM", color: "linear-gradient(135deg,#34d399,#0ea5e9)" },
-  { initials: "AK", color: "linear-gradient(135deg,#818cf8,#e879f9)" },
-  { initials: "SR", color: "linear-gradient(135deg,#fbbf24,#fb7185)" },
-  { initials: "DL", color: "linear-gradient(135deg,#22d3ee,#6366f1)" },
-  { initials: "NP", color: "linear-gradient(135deg,#a3e635,#10b981)" },
+  { initials: "JM", color: "linear-gradient(135deg,#10b981,#0ea5e9)" },
+  { initials: "AK", color: "linear-gradient(135deg,#6366f1,#d946ef)" },
+  { initials: "SR", color: "linear-gradient(135deg,#f59e0b,#f43f5e)" },
+  { initials: "DL", color: "linear-gradient(135deg,#06b6d4,#6366f1)" },
+  { initials: "NP", color: "linear-gradient(135deg,#84cc16,#10b981)" },
 ];
 
 const BENEFITS = [
@@ -96,25 +125,25 @@ const BENEFITS = [
     icon: Filter,
     title: "Only what matters",
     copy: "Earnings, deals, major contracts and policy moves. Routine commentary and clickbait never make it in.",
-    gradient: "from-emerald-400 to-cyan-400",
+    tone: "bg-emerald-50 text-emerald-600",
   },
   {
     icon: Layers,
     title: "Organized by sector",
     copy: "Every story lands in its own channel, so you follow tech, energy or healthcare without wading through the rest.",
-    gradient: "from-cyan-400 to-indigo-400",
+    tone: "bg-cyan-50 text-cyan-600",
   },
   {
     icon: Bell,
     title: "As it happens",
     copy: "Important stories arrive through the day as they break, each with a one-line note on why it matters.",
-    gradient: "from-indigo-400 to-fuchsia-400",
+    tone: "bg-indigo-50 text-indigo-600",
   },
   {
     icon: Users,
     title: "A community to discuss it with",
     copy: "Talk through the news with 1,000+ members who follow the same markets you do.",
-    gradient: "from-fuchsia-400 to-rose-400",
+    tone: "bg-fuchsia-50 text-fuchsia-600",
   },
 ];
 
@@ -149,6 +178,10 @@ const FAQS = [
   },
 ];
 
+function formatChange(change) {
+  return `${change >= 0 ? "+" : ""}${change.toFixed(2)}%`;
+}
+
 function DiscordIcon({ className }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
@@ -157,12 +190,12 @@ function DiscordIcon({ className }) {
   );
 }
 
-function JoinButton({ children = "Join on Discord", className }) {
+function JoinButton({ children = "Join the community", className }) {
   return (
     <a href={DISCORD_INVITE} target="_blank" rel="noreferrer" className="inline-block">
       <ShimmerButton
         background="linear-gradient(135deg, #059669 0%, #0891b2 55%, #4f46e5 100%)"
-        className={cn("gap-2 font-semibold shadow-[0_0_40px_-8px_rgba(34,211,238,0.6)]", className)}
+        className={cn("gap-2 font-semibold shadow-lg shadow-cyan-600/20", className)}
       >
         <DiscordIcon className="h-4 w-4" />
         {children}
@@ -171,21 +204,92 @@ function JoinButton({ children = "Join on Discord", className }) {
   );
 }
 
+function NavJoinButton() {
+  return (
+    <a
+      href={DISCORD_INVITE}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+    >
+      <DiscordIcon className="h-4 w-4" />
+      Join on Discord
+    </a>
+  );
+}
+
 function Logo() {
   return (
     <a href="#top" className="flex items-center gap-2.5">
       <img src="/favicon.svg" alt="" className="h-8 w-8" />
-      <span className="text-[15px] font-semibold tracking-tight text-white">WhatsUpMarket</span>
+      <span className="text-[15px] font-semibold tracking-tight text-ink">WhatsUpMarket</span>
     </a>
+  );
+}
+
+function ChangeChip({ symbol, change }) {
+  const up = change >= 0;
+  const Icon = up ? TrendingUp : TrendingDown;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+        up ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {symbol} {formatChange(change)}
+    </span>
+  );
+}
+
+function TickerBar() {
+  return (
+    <div className="relative border-b border-zinc-200 bg-white">
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-white" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-white" />
+      <Marquee pauseOnHover repeat={3} className="p-0 py-2 [--duration:60s] [--gap:2rem]">
+        {TICKERS.map((t) => {
+          const up = t.change >= 0;
+          return (
+            <span key={t.symbol} className="flex items-center gap-2 whitespace-nowrap text-xs tabular-nums">
+              <span className="font-semibold text-ink">{t.symbol}</span>
+              <span className="text-zinc-500">{t.price.toFixed(2)}</span>
+              <span className={cn("font-semibold", up ? "text-emerald-600" : "text-rose-600")}>
+                {up ? "▲" : "▼"} {formatChange(t.change)}
+              </span>
+            </span>
+          );
+        })}
+      </Marquee>
+    </div>
+  );
+}
+
+function Header() {
+  return (
+    <header className="sticky top-0 z-50">
+      <TickerBar />
+      <div className="border-b border-zinc-200/80 bg-canvas/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+          <Logo />
+          <nav className="hidden items-center gap-8 text-sm text-zinc-600 md:flex">
+            {NAV.map((item) => (
+              <a key={item.href} href={item.href} className="transition-colors hover:text-ink">
+                {item.label}
+              </a>
+            ))}
+          </nav>
+          <NavJoinButton />
+        </div>
+      </div>
+    </header>
   );
 }
 
 function Eyebrow({ children }) {
   return (
-    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
-      <span className="h-px w-6 bg-gradient-to-r from-transparent to-emerald-300" />
-      {children}
-    </p>
+    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">{children}</p>
   );
 }
 
@@ -193,30 +297,16 @@ function SectionHeading({ eyebrow, title, accent, copy, center }) {
   return (
     <BlurFade className={cn("max-w-2xl", center && "mx-auto text-center")}>
       <Eyebrow>{eyebrow}</Eyebrow>
-      <h2 className="mt-4 text-4xl font-semibold leading-[1.1] tracking-tight text-white sm:text-5xl">
+      <h2 className="mt-4 text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
         {title}{" "}
-        {accent ? <AuroraText className="font-serif font-normal italic">{accent}</AuroraText> : null}
+        {accent ? (
+          <span className="bg-gradient-to-r from-emerald-600 via-cyan-600 to-indigo-600 bg-clip-text font-serif font-normal italic text-transparent">
+            {accent}
+          </span>
+        ) : null}
       </h2>
-      {copy ? <p className="mt-5 text-lg leading-relaxed text-zinc-400">{copy}</p> : null}
+      {copy ? <p className="mt-5 text-lg leading-relaxed text-zinc-600">{copy}</p> : null}
     </BlurFade>
-  );
-}
-
-function Nav() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-white/5 bg-ink/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-        <Logo />
-        <nav className="hidden items-center gap-8 text-sm text-zinc-400 md:flex">
-          {NAV.map((item) => (
-            <a key={item.href} href={item.href} className="transition-colors hover:text-white">
-              {item.label}
-            </a>
-          ))}
-        </nav>
-        <JoinButton className="px-4 py-2 text-sm" />
-      </div>
-    </header>
   );
 }
 
@@ -225,7 +315,7 @@ function SectorPill({ sector }) {
   return (
     <span
       className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold"
-      style={{ color, background: `${color}1a`, boxShadow: `inset 0 0 0 1px ${color}33` }}
+      style={{ color, background: `${color}14` }}
     >
       <Icon className="h-3 w-3" />
       {sector}
@@ -236,41 +326,40 @@ function SectorPill({ sector }) {
 function DiscordWindow() {
   return (
     <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className="absolute -inset-10 -z-10 rounded-full bg-gradient-to-tr from-emerald-500/25 via-cyan-500/20 to-indigo-500/25 blur-3xl" />
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-panel/90 shadow-2xl backdrop-blur">
-        <BorderBeam size={120} duration={9} colorFrom="#34d399" colorTo="#818cf8" borderWidth={1.5} />
-        <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
-            <Hash className="h-4 w-4 text-zinc-500" />
+      <div className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl shadow-zinc-900/[0.06]">
+        <BorderBeam size={120} duration={10} colorFrom="#10b981" colorTo="#6366f1" borderWidth={1.5} />
+        <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm font-medium text-ink">
+            <Hash className="h-4 w-4 text-zinc-400" />
             market-news
           </div>
-          <span className="inline-flex items-center gap-1.5 text-xs text-zinc-400">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-            </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
             Live
           </span>
         </div>
-        <div className="h-[430px] overflow-hidden p-3">
-          <AnimatedList delay={2200} className="items-stretch">
+        <div className="h-[440px] overflow-hidden bg-zinc-50/60 p-3">
+          <AnimatedList delay={3000} className="items-stretch">
             {BRIEF.map((item) => (
-              <article key={item.title} className="w-full rounded-xl border border-white/5 bg-white/[0.03] p-3.5">
+              <article key={item.title} className="w-full rounded-xl border border-zinc-200/70 bg-white p-3.5">
                 <div className="flex gap-3">
                   <img src="/favicon.svg" alt="" className="mt-0.5 h-8 w-8 shrink-0 rounded-full" />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-white">WhatsUpMarket</span>
+                      <span className="text-sm font-semibold text-ink">WhatsUpMarket</span>
                       <span className="rounded bg-indigo-500 px-1 text-[10px] font-semibold text-white">BOT</span>
-                      <span className="text-xs text-zinc-500">{item.time} ago</span>
+                      <span className="text-xs text-zinc-400">{item.time} ago</span>
                     </div>
                     <div
-                      className="mt-2 rounded-lg border-l-[3px] bg-black/30 p-3"
+                      className="mt-2 rounded-lg border-l-[3px] bg-zinc-50 p-3"
                       style={{ borderColor: SECTOR_STYLE[item.sector].color }}
                     >
-                      <SectorPill sector={item.sector} />
-                      <p className="mt-2 text-sm font-medium leading-snug text-white">{item.title}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-zinc-400">{item.why}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <SectorPill sector={item.sector} />
+                        <ChangeChip symbol={item.ticker} change={item.change} />
+                      </div>
+                      <p className="mt-2 text-sm font-medium leading-snug text-ink">{item.title}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-zinc-500">{item.why}</p>
                     </div>
                   </div>
                 </div>
@@ -285,91 +374,62 @@ function DiscordWindow() {
 
 function Hero() {
   return (
-    <section id="top" className="relative overflow-hidden">
-      <AnimatedGridPattern
-        numSquares={40}
-        maxOpacity={0.18}
-        duration={3}
-        className="stroke-white/[0.06] text-emerald-400 [mask-image:radial-gradient(800px_circle_at_30%_20%,white,transparent)]"
-      />
-      <div className="pointer-events-none absolute -left-40 -top-40 h-[500px] w-[500px] animate-pulse-slow rounded-full bg-emerald-500/20 blur-[120px]" />
-      <div className="pointer-events-none absolute -right-40 top-20 h-[500px] w-[500px] animate-pulse-slow rounded-full bg-indigo-500/20 blur-[120px]" />
+    <section
+      id="top"
+      className="relative bg-[radial-gradient(900px_500px_at_15%_0%,rgba(16,185,129,0.10),transparent_60%),radial-gradient(800px_500px_at_90%_10%,rgba(99,102,241,0.10),transparent_60%)]"
+    >
+      <div className="mx-auto grid max-w-6xl gap-16 px-6 pb-24 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24">
+        <BlurFade inView={false}>
+          <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs shadow-sm">
+            <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+            <AnimatedShinyText className="mx-0 text-xs">Free Discord community · 1,000+ members</AnimatedShinyText>
+          </div>
 
-      <div className="relative mx-auto grid max-w-6xl gap-16 px-6 pb-24 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24">
-        <div>
-          <BlurFade delay={0.05}>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-300" />
-              <AnimatedShinyText className="mx-0 text-xs">
-                Free Discord community · 1,000+ members
-              </AnimatedShinyText>
-            </div>
-          </BlurFade>
+          <h1 className="mt-7 text-5xl font-semibold leading-[1.03] tracking-tight text-ink sm:text-6xl lg:text-7xl">
+            Market news
+            <br />
+            that{" "}
+            <AuroraText
+              className="font-serif font-normal italic"
+              colors={["#059669", "#0891b2", "#4f46e5", "#c026d3"]}
+            >
+              actually matters.
+            </AuroraText>
+          </h1>
 
-          <BlurFade delay={0.15}>
-            <h1 className="mt-7 text-5xl font-semibold leading-[1.03] tracking-tight text-white sm:text-6xl lg:text-7xl">
-              Market news
-              <br />
-              that{" "}
-              <AuroraText className="font-serif font-normal italic">actually matters.</AuroraText>
-            </h1>
-          </BlurFade>
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-600">
+            The day&apos;s most important stories for{" "}
+            <WordRotate
+              words={["tech", "nuclear", "healthcare", "finance", "energy", "industrials"]}
+              duration={2800}
+              className="font-semibold text-ink"
+            />{" "}
+            investors — curated, explained in a sentence, and delivered straight to Discord.
+          </p>
 
-          <BlurFade delay={0.25}>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-400">
-              The day&apos;s most important stories for{" "}
-              <WordRotate
-                words={["tech", "nuclear", "healthcare", "finance", "energy", "industrials"]}
-                className="font-semibold text-white"
-              />{" "}
-              investors — curated, explained in a sentence, and delivered straight to Discord.
+          <div className="mt-9 flex flex-wrap items-center gap-4">
+            <JoinButton />
+            <a
+              href="#how"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-zinc-300 bg-white px-5 py-3 text-sm font-medium text-ink transition hover:border-zinc-400"
+            >
+              How it works
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </a>
+          </div>
+
+          <div className="mt-10 flex items-center gap-4">
+            <AvatarCircles avatars={AVATARS} numPeople={995} />
+            <p className="text-sm text-zinc-600">
+              <span className="font-semibold text-ink">1,000+ members</span> already inside
             </p>
-          </BlurFade>
+          </div>
+        </BlurFade>
 
-          <BlurFade delay={0.35}>
-            <div className="mt-9 flex flex-wrap items-center gap-4">
-              <JoinButton>Join the community</JoinButton>
-              <a
-                href="#how"
-                className="group inline-flex items-center gap-1.5 rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-zinc-200 transition hover:border-white/25 hover:bg-white/5"
-              >
-                How it works
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </a>
-            </div>
-          </BlurFade>
-
-          <BlurFade delay={0.45}>
-            <div className="mt-10 flex items-center gap-4">
-              <AvatarCircles avatars={AVATARS} numPeople={995} />
-              <p className="text-sm text-zinc-400">
-                <span className="font-semibold text-white">1,000+ members</span> already inside
-              </p>
-            </div>
-          </BlurFade>
-        </div>
-
-        <BlurFade delay={0.3} direction="left">
+        <BlurFade inView={false} delay={0.15}>
           <DiscordWindow />
         </BlurFade>
       </div>
-    </section>
-  );
-}
-
-function SectorStrip() {
-  return (
-    <section className="relative border-y border-white/5 bg-white/[0.015] py-6">
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-32 bg-gradient-to-r from-ink" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-32 bg-gradient-to-l from-ink" />
-      <Marquee pauseOnHover className="[--duration:30s] [--gap:3rem]">
-        {Object.entries(SECTOR_STYLE).map(([name, { color, icon: Icon }]) => (
-          <span key={name} className="flex items-center gap-2.5 text-lg font-medium text-zinc-300">
-            <Icon className="h-5 w-5" style={{ color }} />
-            {name}
-          </span>
-        ))}
-      </Marquee>
     </section>
   );
 }
@@ -382,19 +442,17 @@ function Stats() {
     { value: 0, prefix: "$", suffix: "", label: "To join, forever" },
   ];
   return (
-    <section className="mx-auto max-w-6xl px-6 py-20">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {stats.map((stat, i) => (
-          <BlurFade key={stat.label} delay={i * 0.08}>
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center">
-              <p className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                {stat.prefix}
-                <NumberTicker value={stat.value} />
-                {stat.suffix}
-              </p>
-              <p className="mt-2 text-sm text-zinc-500">{stat.label}</p>
-            </div>
-          </BlurFade>
+    <section className="border-y border-zinc-200 bg-white">
+      <div className="mx-auto grid max-w-6xl grid-cols-2 px-6 md:grid-cols-4 md:divide-x md:divide-zinc-200">
+        {stats.map((stat) => (
+          <div key={stat.label} className="py-10 text-center">
+            <p className="text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
+              {stat.prefix}
+              <NumberTicker value={stat.value} />
+              {stat.suffix}
+            </p>
+            <p className="mt-2 text-sm text-zinc-500">{stat.label}</p>
+          </div>
         ))}
       </div>
     </section>
@@ -403,139 +461,26 @@ function Stats() {
 
 function Benefits() {
   return (
-    <section id="why" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-24">
+    <section id="why" className="mx-auto max-w-6xl scroll-mt-32 px-6 py-24">
       <SectionHeading
         eyebrow="Why members join"
         title="Less scrolling."
         accent="Better informed."
         copy="Financial news moves fast and most of it doesn't matter. We do the filtering so your feed stays short, sharp and useful."
       />
-      <div className="mt-14 grid gap-4 md:grid-cols-2">
-        {BENEFITS.map((item, i) => {
+      <BlurFade className="mt-14 grid gap-4 md:grid-cols-2" delay={0.05}>
+        {BENEFITS.map((item) => {
           const Icon = item.icon;
           return (
-            <BlurFade key={item.title} delay={i * 0.08}>
-              <MagicCard className="h-full rounded-2xl">
-                <div className="p-7">
-                  <span
-                    className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-ink shadow-lg",
-                      item.gradient
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <h3 className="mt-6 text-xl font-semibold text-white">{item.title}</h3>
-                  <p className="mt-2 leading-relaxed text-zinc-400">{item.copy}</p>
-                </div>
-              </MagicCard>
-            </BlurFade>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function HowItWorks() {
-  return (
-    <section id="how" className="relative scroll-mt-20 py-24">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[400px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-[120px]" />
-      <div className="relative mx-auto max-w-6xl px-6">
-        <SectionHeading eyebrow="How it works" title="Up and running" accent="in a minute." center />
-        <div className="relative mt-16 grid gap-6 md:grid-cols-3">
-          <div className="absolute left-[16%] right-[16%] top-7 hidden h-px bg-gradient-to-r from-emerald-400/0 via-cyan-400/60 to-indigo-400/0 md:block" />
-          {STEPS.map((step, i) => (
-            <BlurFade key={step.title} delay={i * 0.12} className="relative text-center">
-              <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-panel text-lg font-semibold text-white shadow-[0_0_30px_-6px_rgba(34,211,238,0.5)]">
-                <AuroraText>{i + 1}</AuroraText>
-              </span>
-              <h3 className="mt-6 text-xl font-semibold text-white">{step.title}</h3>
-              <p className="mx-auto mt-2 max-w-xs leading-relaxed text-zinc-400">{step.copy}</p>
-            </BlurFade>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Coverage() {
-  return (
-    <section id="coverage" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-24">
-      <SectionHeading
-        eyebrow="Coverage"
-        title="A channel for every"
-        accent="corner of the market."
-        copy="Follow everything, or just the sectors you invest in."
-      />
-      <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {COVERAGE.map((item, i) => {
-          const { color, icon: Icon } = SECTOR_STYLE[item.name];
-          return (
-            <BlurFade key={item.name} delay={i * 0.06}>
-              <MagicCard
-                className="h-full rounded-2xl"
-                gradientFrom={color}
-                gradientTo="#818cf8"
-                gradientColor={`${color}1f`}
-              >
-                <div className="p-7">
-                  <div className="flex items-center justify-between">
-                    <span
-                      className="flex h-11 w-11 items-center justify-center rounded-xl"
-                      style={{ background: `${color}1a`, color, boxShadow: `inset 0 0 0 1px ${color}40` }}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-zinc-500">
-                      <Hash className="h-3 w-3" />
-                      {item.name.toLowerCase()}
-                    </span>
-                  </div>
-                  <h3 className="mt-6 text-xl font-semibold text-white">{item.name}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-400">{item.copy}</p>
-                </div>
-              </MagicCard>
-            </BlurFade>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function Faq() {
-  const [open, setOpen] = useState(0);
-  return (
-    <section id="faq" className="mx-auto grid max-w-6xl scroll-mt-20 gap-12 px-6 py-24 lg:grid-cols-[0.8fr_1.2fr]">
-      <SectionHeading eyebrow="FAQ" title="Questions," accent="answered." />
-      <BlurFade className="space-y-3" delay={0.1}>
-        {FAQS.map((item, i) => {
-          const isOpen = open === i;
-          return (
-            <div
-              key={item.q}
-              className={cn(
-                "rounded-2xl border transition-colors",
-                isOpen ? "border-emerald-400/30 bg-emerald-400/[0.04]" : "border-white/5 bg-white/[0.02]"
-              )}
-            >
-              <button
-                type="button"
-                onClick={() => setOpen(isOpen ? -1 : i)}
-                className="flex w-full items-center justify-between gap-6 px-6 py-5 text-left"
-                aria-expanded={isOpen}
-              >
-                <span className="text-base font-medium text-white">{item.q}</span>
-                {isOpen ? (
-                  <Minus className="h-4 w-4 shrink-0 text-emerald-300" />
-                ) : (
-                  <Plus className="h-4 w-4 shrink-0 text-zinc-500" />
-                )}
-              </button>
-              {isOpen ? <p className="-mt-1 px-6 pb-5 leading-relaxed text-zinc-400">{item.a}</p> : null}
-            </div>
+            <MagicCard key={item.title} className="h-full rounded-2xl shadow-sm">
+              <div className="p-7">
+                <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl", item.tone)}>
+                  <Icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-6 text-xl font-semibold text-ink">{item.title}</h3>
+                <p className="mt-2 leading-relaxed text-zinc-600">{item.copy}</p>
+              </div>
+            </MagicCard>
           );
         })}
       </BlurFade>
@@ -543,23 +488,126 @@ function Faq() {
   );
 }
 
+function HowItWorks() {
+  return (
+    <section id="how" className="scroll-mt-32 border-y border-zinc-200 bg-white py-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <SectionHeading eyebrow="How it works" title="Up and running" accent="in a minute." center />
+        <BlurFade className="relative mt-16 grid gap-10 md:grid-cols-3" delay={0.05}>
+          <div className="absolute left-[16%] right-[16%] top-7 hidden h-px bg-gradient-to-r from-emerald-300 via-cyan-300 to-indigo-300 md:block" />
+          {STEPS.map((step, i) => (
+            <div key={step.title} className="relative text-center">
+              <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-zinc-200 bg-white text-lg font-semibold text-emerald-600 shadow-sm">
+                {i + 1}
+              </span>
+              <h3 className="mt-6 text-xl font-semibold text-ink">{step.title}</h3>
+              <p className="mx-auto mt-2 max-w-xs leading-relaxed text-zinc-600">{step.copy}</p>
+            </div>
+          ))}
+        </BlurFade>
+      </div>
+    </section>
+  );
+}
+
+function Coverage() {
+  return (
+    <section id="coverage" className="mx-auto max-w-6xl scroll-mt-32 px-6 py-24">
+      <SectionHeading
+        eyebrow="Coverage"
+        title="A channel for every"
+        accent="corner of the market."
+        copy="Follow everything, or just the sectors you invest in."
+      />
+      <BlurFade className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" delay={0.05}>
+        {COVERAGE.map((item) => {
+          const { color, icon: Icon } = SECTOR_STYLE[item.name];
+          return (
+            <MagicCard
+              key={item.name}
+              className="h-full rounded-2xl shadow-sm"
+              gradientFrom={color}
+              gradientTo="#6366f1"
+              gradientColor={`${color}0f`}
+            >
+              <div className="p-7">
+                <div className="flex items-center justify-between">
+                  <span
+                    className="flex h-11 w-11 items-center justify-center rounded-xl"
+                    style={{ background: `${color}14`, color }}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="flex items-center gap-1 text-xs text-zinc-400">
+                    <Hash className="h-3 w-3" />
+                    {item.name.toLowerCase()}
+                  </span>
+                </div>
+                <h3 className="mt-6 text-xl font-semibold text-ink">{item.name}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{item.copy}</p>
+              </div>
+            </MagicCard>
+          );
+        })}
+      </BlurFade>
+    </section>
+  );
+}
+
+function Faq() {
+  const [open, setOpen] = useState(0);
+  return (
+    <section id="faq" className="scroll-mt-32 border-t border-zinc-200 bg-white">
+      <div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 lg:grid-cols-[0.8fr_1.2fr]">
+        <SectionHeading eyebrow="FAQ" title="Questions," accent="answered." />
+        <BlurFade className="space-y-3" delay={0.05}>
+          {FAQS.map((item, i) => {
+            const isOpen = open === i;
+            return (
+              <div
+                key={item.q}
+                className={cn(
+                  "rounded-2xl border transition-colors",
+                  isOpen ? "border-emerald-200 bg-emerald-50/50" : "border-zinc-200 bg-white"
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpen(isOpen ? -1 : i)}
+                  className="flex w-full items-center justify-between gap-6 px-6 py-5 text-left"
+                  aria-expanded={isOpen}
+                >
+                  <span className="text-base font-medium text-ink">{item.q}</span>
+                  {isOpen ? (
+                    <Minus className="h-4 w-4 shrink-0 text-emerald-600" />
+                  ) : (
+                    <Plus className="h-4 w-4 shrink-0 text-zinc-400" />
+                  )}
+                </button>
+                {isOpen ? <p className="-mt-1 px-6 pb-5 leading-relaxed text-zinc-600">{item.a}</p> : null}
+              </div>
+            );
+          })}
+        </BlurFade>
+      </div>
+    </section>
+  );
+}
+
 function FinalCta() {
   return (
-    <section className="px-6 pb-24">
+    <section className="px-6 py-24">
       <BlurFade className="mx-auto max-w-6xl">
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-950 via-ink to-indigo-950 px-8 py-24 text-center sm:px-16">
-          <Meteors number={24} />
-          <BorderBeam size={200} duration={12} colorFrom="#34d399" colorTo="#e879f9" borderWidth={1.5} />
-          <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[600px] -translate-x-1/2 rounded-full bg-cyan-500/20 blur-[100px]" />
-          <div className="relative">
-            <h2 className="mx-auto max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-white sm:text-6xl">
-              Join 1,000+ investors who{" "}
-              <AuroraText className="font-serif font-normal italic">start their day here.</AuroraText>
-            </h2>
-            <p className="mx-auto mt-6 max-w-lg text-lg text-zinc-400">Free to join. Leave any time.</p>
-            <div className="mt-10 flex justify-center">
-              <JoinButton className="px-8 py-4 text-base">Join the community</JoinButton>
-            </div>
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 via-cyan-50 to-indigo-100 px-8 py-20 text-center ring-1 ring-zinc-200 sm:px-16">
+          <h2 className="mx-auto max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-ink sm:text-6xl">
+            Join 1,000+ investors who{" "}
+            <span className="bg-gradient-to-r from-emerald-600 via-cyan-600 to-indigo-600 bg-clip-text font-serif font-normal italic text-transparent">
+              start their day here.
+            </span>
+          </h2>
+          <p className="mx-auto mt-6 max-w-lg text-lg text-zinc-600">Free to join. Leave any time.</p>
+          <div className="mt-10 flex justify-center">
+            <JoinButton className="px-8 py-4 text-base" />
           </div>
         </div>
       </BlurFade>
@@ -569,11 +617,12 @@ function FinalCta() {
 
 function Footer() {
   return (
-    <footer className="border-t border-white/5">
+    <footer className="border-t border-zinc-200 bg-white">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
         <Logo />
         <p className="max-w-md sm:text-right">
-          © {new Date().getFullYear()} WhatsUpMarket. News and discussion only — not financial advice.
+          © {new Date().getFullYear()} WhatsUpMarket. Prices shown are illustrative. News and discussion only — not
+          financial advice.
         </p>
       </div>
     </footer>
@@ -583,9 +632,8 @@ function Footer() {
 export default function App() {
   return (
     <div className="overflow-x-clip">
-      <Nav />
+      <Header />
       <Hero />
-      <SectorStrip />
       <Stats />
       <Benefits />
       <HowItWorks />
