@@ -10,7 +10,7 @@ export function BlurFade({
   direction = "up",
   inView = true,
   inViewMargin = "-60px",
-  blur = "8px",
+  blur = null,
   ...props
 }) {
   const ref = useRef(null);
@@ -18,9 +18,10 @@ export function BlurFade({
   const isInView = !inView || inViewResult;
   const axis = direction === "left" || direction === "right" ? "x" : "y";
   const start = direction === "right" || direction === "down" ? -offset : offset;
+  // Animating CSS filter on many elements is expensive, so blur is opt-in.
   const variants = {
-    hidden: { [axis]: start, opacity: 0, filter: `blur(${blur})` },
-    visible: { [axis]: 0, opacity: 1, filter: "blur(0px)" },
+    hidden: { [axis]: start, opacity: 0, ...(blur ? { filter: `blur(${blur})` } : {}) },
+    visible: { [axis]: 0, opacity: 1, ...(blur ? { filter: "blur(0px)" } : {}) },
   };
 
   return (

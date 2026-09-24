@@ -8,19 +8,17 @@ export default {
         serif: ["Instrument Serif", "ui-serif", "Georgia", "serif"],
       },
       colors: {
-        ink: "#05060a",
-        panel: "#0b0d14",
+        ink: "#0b0d12",
+        canvas: "#fbfbf9",
       },
       animation: {
         aurora: "aurora 8s ease-in-out infinite alternate",
-        meteor: "meteor 5s linear infinite",
         "shiny-text": "shiny-text 8s ease-in-out infinite",
         marquee: "marquee var(--duration) linear infinite",
         "marquee-vertical": "marquee-vertical var(--duration) linear infinite",
         "shimmer-slide": "shimmer-slide var(--speed) ease-in-out infinite alternate",
         "spin-around": "spin-around calc(var(--speed) * 2) infinite linear",
         shine: "shine var(--duration) infinite linear",
-        "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       keyframes: {
         aurora: {
@@ -29,11 +27,6 @@ export default {
           "50%": { backgroundPosition: "100% 50%", transform: "rotate(-2deg) scale(0.97)" },
           "75%": { backgroundPosition: "50% 0%", transform: "rotate(2deg) scale(1.03)" },
           "100%": { backgroundPosition: "0% 50%", transform: "rotate(-3deg) scale(1)" },
-        },
-        meteor: {
-          "0%": { transform: "rotate(var(--angle)) translateX(0)", opacity: "1" },
-          "70%": { opacity: "1" },
-          "100%": { transform: "rotate(var(--angle)) translateX(-500px)", opacity: "0" },
         },
         "shiny-text": {
           "0%, 90%, 100%": { backgroundPosition: "calc(-100% - var(--shiny-width)) 0" },

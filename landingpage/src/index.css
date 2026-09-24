@@ -7,9 +7,9 @@ html {
 }
 
 body {
-  @apply bg-ink font-sans text-zinc-200 antialiased;
+  @apply bg-canvas font-sans text-ink antialiased;
 }
 
 ::selection {
-  @apply bg-emerald-400/30 text-white;
+  @apply bg-emerald-200 text-ink;
 }

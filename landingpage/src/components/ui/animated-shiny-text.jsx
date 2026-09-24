@@ -10,9 +10,9 @@ export function AnimatedShinyText({
     <span
       style={{ "--shiny-width": `${shimmerWidth}px` }}
       className={cn(
-        "mx-auto max-w-md text-zinc-400/80",
+        "mx-auto max-w-md text-zinc-600/80",
         "animate-shiny-text bg-clip-text bg-no-repeat [background-size:var(--shiny-width)_100%] [transition:background-position_1s_cubic-bezier(.6,.6,0,1)_infinite]",
-        "bg-gradient-to-r from-transparent via-white/80 via-50% to-transparent",
+        "bg-gradient-to-r from-transparent via-zinc-900/80 via-50% to-transparent",
         className
       )}
       {...props}
