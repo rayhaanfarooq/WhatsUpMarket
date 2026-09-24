@@ -4,51 +4,20 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["IBM Plex Sans", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["Syne", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        serif: ["Instrument Serif", "ui-serif", "Georgia", "serif"],
       },
       colors: {
-        ink: "#07090d",
-      },
-      animation: {
-        "shiny-text": "shiny-text 8s ease-in-out infinite",
-        marquee: "marquee var(--duration) linear infinite",
-        "marquee-vertical": "marquee-vertical var(--duration) linear infinite",
-        "shimmer-slide": "shimmer-slide var(--speed) ease-in-out infinite alternate",
-        "spin-around": "spin-around calc(var(--speed) * 2) infinite linear",
-        shine: "shine var(--duration) infinite linear",
-      },
-      keyframes: {
-        "shiny-text": {
-          "0%, 90%, 100%": {
-            backgroundPosition: "calc(-100% - var(--shiny-width)) 0",
-          },
-          "30%, 60%": {
-            backgroundPosition: "calc(100% + var(--shiny-width)) 0",
-          },
-        },
-        marquee: {
-          from: { transform: "translateX(0)" },
-          to: { transform: "translateX(calc(-100% - var(--gap)))" },
-        },
-        "marquee-vertical": {
-          from: { transform: "translateY(0)" },
-          to: { transform: "translateY(calc(-100% - var(--gap)))" },
-        },
-        "shimmer-slide": {
-          to: { transform: "translate(calc(100cqb - 100%), 0)" },
-        },
-        "spin-around": {
-          "0%": { transform: "translateZ(0) rotate(0deg)" },
-          "15%, 35%": { transform: "translateZ(0) rotate(90deg)" },
-          "65%, 85%": { transform: "translateZ(0) rotate(270deg)" },
-          "100%": { transform: "translateZ(0) rotate(360deg)" },
-        },
-        shine: {
-          "0%": { backgroundPosition: "0% 0%" },
-          "50%": { backgroundPosition: "100% 100%" },
-          to: { backgroundPosition: "0% 0%" },
+        ink: "#14120f",
+        paper: "#faf8f3",
+        line: "#e7e2d6",
+        muted: "#6b665c",
+        forest: {
+          50: "#eef5f0",
+          600: "#1f6b4a",
+          700: "#17563b",
+          800: "#11432e",
+          900: "#0c3022",
         },
       },
     },
