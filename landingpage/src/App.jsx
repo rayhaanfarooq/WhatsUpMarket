@@ -11,6 +11,7 @@ import {
   Minus,
   Plus,
   Sparkles,
+  Star,
   TrendingDown,
   TrendingUp,
   X,
@@ -36,6 +37,7 @@ const NAV = [
   { href: "#why", label: "Why join" },
   { href: "#how", label: "How it works" },
   { href: "#coverage", label: "Coverage" },
+  { href: "#reviews", label: "Reviews" },
   { href: "#faq", label: "FAQ" },
 ];
 
@@ -152,6 +154,64 @@ const COVERAGE = [
   { name: "Finance", copy: "Banks, rates, the Fed and the broader economy." },
   { name: "Energy", copy: "Oil, gas, renewables and the power grid." },
   { name: "Industrials", copy: "Aerospace, defense, manufacturing and logistics." },
+];
+
+/** Placeholder quotes — replace with real member reviews before launch. */
+const REVIEWS = [
+  {
+    name: "Marcus T.",
+    role: "Swing trader",
+    quote:
+      "I used to have like six tabs open every morning. Now I check #tech with my coffee and I'm caught up before the open.",
+    color: "linear-gradient(135deg,#10b981,#0ea5e9)",
+  },
+  {
+    name: "Priya S.",
+    role: "Software engineer",
+    quote:
+      "The one-line “why it matters” under each post is honestly the best part. I'm not a finance person and I actually get it now.",
+    color: "linear-gradient(135deg,#6366f1,#d946ef)",
+  },
+  {
+    name: "Dana L.",
+    role: "Energy analyst",
+    quote: "Muted everything except nuclear and energy. It's exactly the amount of news I want, nothing more.",
+    color: "linear-gradient(135deg,#f59e0b,#f43f5e)",
+  },
+  {
+    name: "Alex M.",
+    role: "Member since spring",
+    quote:
+      "Been in a lot of stock Discords. Most of them are pump spam. This one is just… news. Which is all I wanted.",
+    color: "linear-gradient(135deg,#06b6d4,#6366f1)",
+  },
+  {
+    name: "Chris W.",
+    role: "Long-term investor",
+    quote:
+      "Low-key the best part is the chat after a big story drops. People actually know what they're talking about.",
+    color: "linear-gradient(135deg,#84cc16,#10b981)",
+  },
+  {
+    name: "Sam K.",
+    role: "College student",
+    quote: "Free, no upsells, no “premium signals” channel. Kind of refreshing tbh.",
+    color: "linear-gradient(135deg,#f43f5e,#a855f7)",
+  },
+  {
+    name: "Nina P.",
+    role: "Nurse",
+    quote:
+      "My dad and I both joined and now we text each other about the healthcare posts. Did not expect that, but I love it.",
+    color: "linear-gradient(135deg,#0ea5e9,#22c55e)",
+  },
+  {
+    name: "Jordan B.",
+    role: "Options trader",
+    quote:
+      "Saw the SMR contract news here a solid hour before my timeline was full of it. The filtering is legit.",
+    color: "linear-gradient(135deg,#eab308,#ea580c)",
+  },
 ];
 
 const FAQS = [
@@ -585,6 +645,66 @@ function Coverage() {
   );
 }
 
+function ReviewCard({ review }) {
+  const initials = review.name
+    .split(" ")
+    .map((part) => part[0])
+    .join("");
+  return (
+    <figure className="w-80 shrink-0 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <div className="flex gap-0.5 text-amber-400">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Star key={i} className="h-4 w-4 fill-current" />
+        ))}
+      </div>
+      <blockquote className="mt-3 text-[15px] leading-relaxed text-zinc-700">{review.quote}</blockquote>
+      <figcaption className="mt-4 flex items-center gap-3">
+        <span
+          className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white"
+          style={{ background: review.color }}
+        >
+          {initials}
+        </span>
+        <span>
+          <span className="block text-sm font-semibold text-ink">{review.name}</span>
+          <span className="block text-xs text-zinc-500">{review.role}</span>
+        </span>
+      </figcaption>
+    </figure>
+  );
+}
+
+function Reviews() {
+  const half = Math.ceil(REVIEWS.length / 2);
+  return (
+    <section id="reviews" className="scroll-mt-32 border-t border-zinc-200 bg-zinc-50/70 py-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <SectionHeading
+          eyebrow="Reviews"
+          title="What members"
+          accent="are saying."
+          copy="Straight from the people reading the feed every day."
+          center
+        />
+      </div>
+      <BlurFade className="relative mt-14" delay={0.05}>
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-zinc-50 sm:w-40" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-zinc-50 sm:w-40" />
+        <Marquee pauseOnHover repeat={3} className="[--duration:55s] [--gap:1rem]">
+          {REVIEWS.slice(0, half).map((review) => (
+            <ReviewCard key={review.name} review={review} />
+          ))}
+        </Marquee>
+        <Marquee pauseOnHover reverse repeat={3} className="mt-2 [--duration:60s] [--gap:1rem]">
+          {REVIEWS.slice(half).map((review) => (
+            <ReviewCard key={review.name} review={review} />
+          ))}
+        </Marquee>
+      </BlurFade>
+    </section>
+  );
+}
+
 function Faq() {
   const [open, setOpen] = useState(0);
   return (
@@ -669,6 +789,7 @@ export default function App() {
       <Benefits />
       <HowItWorks />
       <Coverage />
+      <Reviews />
       <Faq />
       <FinalCta />
       <Footer />
